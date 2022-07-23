@@ -1,14 +1,15 @@
-const doWorkPromise = new Promise((resolve, reject) => {
-  setTimeout(() => {
-    resolve("Data upload completed successfully!");
-    reject("Error creating document");
-  }, 2000);
-});
+const add = (a, b) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(a + b);
+    }, 2000);
+  });
+};
 
-doWorkPromise
-  .then((result) => {
-    console.log(result);
+add(5, 3)
+  .then((sum) => {
+    console.log(sum);
   })
   .catch((error) => {
-    console.log("Nothing to log to the console", error);
+    console.log(error);
   });
