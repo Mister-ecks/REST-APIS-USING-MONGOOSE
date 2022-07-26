@@ -33,6 +33,50 @@ app.get("/tasks/:id", async (req, res) => {
   }
 });
 
+app.post("/tasks", async (req, res) => {
+  const task = new Tasks(req.body);
+  try {
+    await task.save();
+    res.status(201).send(task);
+  } catch (error) {
+    res.status(400).send(error);
+  }
+});
+app.patch("/tasks/:id", async (req, res) => {
+  let updates = Object.keys(req.body);
+  let allowedUpdates = ["description", "completed"];
+  let isValidOperation = updates.every((update) =>
+    allowedUpdates.includes(update)
+  );
+
+  if (!isValidOperation) {
+    return res.status(400).send({ error: "Invalid Operation" });
+  }
+
+  try {
+    let task = await Tasks.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (!task) {
+      return res.status(400).send({ error: "No task found" });
+    }
+    res.send(task);
+  } catch (error) {
+    res.status(400).send(error);
+  }
+});
+app.delete("/tasks/:id", async (req, res) => {
+  try {
+    let task = await Tasks.findByIdAndDelete(req.params.id);
+    if (!task) {
+      return res.status(404).send();
+    }
+    res.send(task);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
 app.get("/users", async (req, res) => {
   try {
     const users = await User.find({});
@@ -55,7 +99,18 @@ app.get("/users/:id", async (req, res) => {
     res.status(500).send();
   }
 });
+app.delete("/users/:id", async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
 
+    if (!user) {
+      return res.status(400).send();
+    }
+    res.send(user);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
 app.post("/users", async (req, res) => {
   const user = new User(req.body);
   try {
@@ -65,28 +120,30 @@ app.post("/users", async (req, res) => {
     res.status(400).send(error);
   }
 });
-app.post("/tasks", async (req, res) => {
-  const task = new Tasks(req.body);
+
+app.patch("/users/:id", async (req, res) => {
+  let updates = Object.keys(req.body);
+  let allowedUpdates = ["name", "password", "email", "age"];
+  let isValidOperation = updates.every((update) =>
+    allowedUpdates.includes(update)
+  );
+  if (!isValidOperation) {
+    return res.status(400).send({ error: "Invalid Update" });
+  }
   try {
-    await task.save();
-    res.status(201).send(task);
-  } catch (error) {
-    res.status(400).send(error);
+    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!user) {
+      return res.status(404).send();
+    }
+    res.send(user);
+  } catch (e) {
+    res.status(500).send(e);
   }
 });
-
-// app.post("/tasks", (req, res) => {
-//   const task = new Tasks(req.body);
-
-//   task
-//     .save()
-//     .then(() => {
-//       res.status(201).send(task);
-//     })
-//     .catch((e) => {
-//       res.status(400).send(e);
-//     });
-// });
 
 app.listen(port, () => {
   console.log(`Server is listening on port ${port}`);
