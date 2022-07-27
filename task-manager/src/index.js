@@ -1,150 +1,26 @@
 const express = require("express");
-
-const app = express();
-
 require("./db/mongoose");
-
-const User = require("./models/user");
-const Tasks = require("./models/tasks");
+const userRouter = require("./routers/user");
+const taskRouter = require("./routers/task");
+const app = express();
 
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
-
-app.get("/tasks", async (req, res) => {
-  try {
-    const task = await Tasks.find();
-    res.status(200).send(task);
-  } catch (error) {
-    res.status(500).send(error);
-  }
-});
-
-app.get("/tasks/:id", async (req, res) => {
-  const _id = req.params.id;
-  try {
-    const task = await Tasks.findById(_id);
-    if (!task) {
-      return res.status(400).send();
-    }
-    res.status(200).send(task);
-  } catch (e) {
-    res.status(500).send();
-  }
-});
-
-app.post("/tasks", async (req, res) => {
-  const task = new Tasks(req.body);
-  try {
-    await task.save();
-    res.status(201).send(task);
-  } catch (error) {
-    res.status(400).send(error);
-  }
-});
-app.patch("/tasks/:id", async (req, res) => {
-  let updates = Object.keys(req.body);
-  let allowedUpdates = ["description", "completed"];
-  let isValidOperation = updates.every((update) =>
-    allowedUpdates.includes(update)
-  );
-
-  if (!isValidOperation) {
-    return res.status(400).send({ error: "Invalid Operation" });
-  }
-
-  try {
-    let task = await Tasks.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!task) {
-      return res.status(400).send({ error: "No task found" });
-    }
-    res.send(task);
-  } catch (error) {
-    res.status(400).send(error);
-  }
-});
-app.delete("/tasks/:id", async (req, res) => {
-  try {
-    let task = await Tasks.findByIdAndDelete(req.params.id);
-    if (!task) {
-      return res.status(404).send();
-    }
-    res.send(task);
-  } catch (error) {
-    res.status(500).send(error);
-  }
-});
-app.get("/users", async (req, res) => {
-  try {
-    const users = await User.find({});
-    res.status(200).send(users);
-  } catch (error) {
-    res.status(500).send();
-  }
-});
-
-app.get("/users/:id", async (req, res) => {
-  let _id = req.params.id;
-
-  try {
-    const findId = await User.findById(_id);
-    if (!findId) {
-      res.status(400).send();
-    }
-    res.status(200).send(findId);
-  } catch (error) {
-    res.status(500).send();
-  }
-});
-app.delete("/users/:id", async (req, res) => {
-  try {
-    const user = await User.findByIdAndDelete(req.params.id);
-
-    if (!user) {
-      return res.status(400).send();
-    }
-    res.send(user);
-  } catch (error) {
-    res.status(500).send(error);
-  }
-});
-app.post("/users", async (req, res) => {
-  const user = new User(req.body);
-  try {
-    await user.save();
-    res.status(201).send(user);
-  } catch (error) {
-    res.status(400).send(error);
-  }
-});
-
-app.patch("/users/:id", async (req, res) => {
-  let updates = Object.keys(req.body);
-  let allowedUpdates = ["name", "password", "email", "age"];
-  let isValidOperation = updates.every((update) =>
-    allowedUpdates.includes(update)
-  );
-  if (!isValidOperation) {
-    return res.status(400).send({ error: "Invalid Update" });
-  }
-  try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!user) {
-      return res.status(404).send();
-    }
-    res.send(user);
-  } catch (e) {
-    res.status(500).send(e);
-  }
-});
+app.use(userRouter);
+app.use(taskRouter);
 
 app.listen(port, () => {
   console.log(`Server is listening on port ${port}`);
 });
+
+const bcrypt = require("bcryptjs");
+
+const hash = async () => {
+  let password = "Nagatopain@123";
+  let hashedPassword = await bcrypt.hash(password, 8);
+  let isSame = await bcrypt.compare("Nagatopain@123", hashedPassword);
+  console.log(isSame);
+  // console.log(password, hashedPassword);
+};
+hash();
